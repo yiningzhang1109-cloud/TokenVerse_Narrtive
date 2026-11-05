@@ -1,0 +1,389 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Chapter 2 Flow Map</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a subway-style map. Columns are moments in the level, rows are lanes (Route A, shared trunk, Route B, Easter eggs). Lines are drawn between cards by script. */
+:root{
+  --bg:#EDF1F1; --surface:#FFFFFF; --ink:#13201F; --muted:#586968; --line:#C6D1D0;
+  --a:#B8620F; --a-tint:#FBEBD8; --lane-a:#FAF3EA;
+  --b:#0B7776; --b-tint:#D6EEEC; --lane-b:#E9F4F3;
+  --s:#4B5E5D; --lane-s:#E2E9E9;
+  --egg:#6D44C4; --egg-tint:#EBE3FA; --lane-e:#F0ECF8;
+  --ok:#2A9556; --need:#8A9A98;
+  --display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1615; --surface:#182120; --ink:#E5EEEC; --muted:#92A5A2; --line:#2B3A38;
+  --a:#F0A24D; --a-tint:#3B2A15; --lane-a:#1A1713;
+  --b:#4FC4C1; --b-tint:#123231; --lane-b:#112120;
+  --s:#9DB1AE; --lane-s:#162120;
+  --egg:#B79BF0; --egg-tint:#2B2244; --lane-e:#171420;
+  --ok:#5CCB8A; --need:#6F817F; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1615; --surface:#182120; --ink:#E5EEEC; --muted:#92A5A2; --line:#2B3A38;
+  --a:#F0A24D; --a-tint:#3B2A15; --lane-a:#1A1713;
+  --b:#4FC4C1; --b-tint:#123231; --lane-b:#112120;
+  --s:#9DB1AE; --lane-s:#162120;
+  --egg:#B79BF0; --egg-tint:#2B2244; --lane-e:#171420;
+  --ok:#5CCB8A; --need:#6F817F; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.45;
+  padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance}
+.top{display:grid;gap:14px;margin-bottom:16px}
+.top h1{font-size:clamp(26px,4vw,38px);line-height:1.05;letter-spacing:-.01em}
+.top p{margin:0;color:var(--muted);max-width:68ch}
+.bar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{font:500 13px var(--body);color:var(--muted);background:none;border:0;padding:7px 13px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.seg button[data-r="A"][aria-pressed="true"]{background:var(--a);color:var(--bg)}
+.seg button[data-r="B"][aria-pressed="true"]{background:var(--b);color:var(--bg)}
+button:focus-visible,.card:focus-visible,.egg:focus-visible,.pin:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.tog{display:inline-flex;gap:7px;align-items:center;font-size:13px;color:var(--muted);cursor:pointer}
+.btn{font:500 13px var(--body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:12px;color:var(--muted);align-items:center}
+.legend span{display:inline-flex;gap:6px;align-items:center}
+.sw{width:22px;height:0;border-top:3px solid var(--s)}
+.sw.a{border-color:var(--a)}.sw.b{border-color:var(--b)}.sw.d{border-top-style:dashed}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;border:1.5px solid var(--need)}
+.dot.ok{background:var(--ok);border-color:var(--ok)}
+.fk{width:20px;height:13px;border:1.5px dashed var(--muted);border-radius:3px;display:inline-block}
+.stats{font-size:13px;color:var(--muted)}
+.stats b{color:var(--ink);font-weight:600}
+
+.scroller{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.map{position:relative;display:grid;grid-template-columns:112px repeat(12,264px);width:max-content}
+.cell{padding:16px 16px;display:flex;flex-direction:column;gap:14px;justify-content:center;border-bottom:1px solid var(--line);position:relative}
+.cell.A{background:var(--lane-a)}.cell.S{background:var(--lane-s)}.cell.B{background:var(--lane-b)}.cell.E{background:var(--lane-e);border-bottom:0;justify-content:flex-start}
+.lane{position:sticky;left:0;z-index:6;padding:14px 12px;display:flex;flex-direction:column;justify-content:center;gap:2px;border-right:1px solid var(--line);font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.lane b{font-family:var(--display);font-size:15px;letter-spacing:0;text-transform:none;color:var(--ink);font-weight:700}
+.lane.A{background:var(--lane-a)}.lane.A b{color:var(--a)}
+.lane.B{background:var(--lane-b)}.lane.B b{color:var(--b)}
+.lane.S{background:var(--lane-s)}.lane.E{background:var(--lane-e)}.lane.E b{color:var(--egg)}
+.lane.H{background:var(--surface)}
+.hd{padding:14px 16px 12px;display:flex;flex-direction:column;gap:6px;border-bottom:1px solid var(--line);background:var(--surface)}
+.hd small{font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.hd h3{font-size:17px;line-height:1.15}
+.pin{align-self:flex-start;font:400 11px var(--mono);color:var(--muted);background:none;border:1px solid var(--line);border-radius:999px;padding:3px 9px;cursor:pointer;text-align:left}
+.pin:hover{color:var(--ink);border-color:var(--ink)}
+
+.card{position:relative;z-index:2;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px 11px;display:grid;gap:5px;cursor:pointer;transition:opacity .2s,box-shadow .15s}
+.card:hover{box-shadow:0 2px 0 var(--ink)}
+.card.filler{border-style:dashed;background:transparent}
+.card.A{border-color:var(--a)}.card.B{border-color:var(--b)}
+.ch{display:flex;align-items:center;gap:7px;font:500 10.5px var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.ch .who{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rt{padding:1px 6px;border-radius:4px;background:var(--lane-s);color:var(--s)}
+.rt.A{background:var(--a-tint);color:var(--a)}.rt.B{background:var(--b-tint);color:var(--b)}
+.card h4{margin:0;font:700 14.5px/1.2 var(--display)}
+.card p{margin:0;font-size:12.5px;color:var(--muted)}
+.beats{margin:0;padding-left:18px;font-size:12.5px;color:var(--muted);display:grid;gap:3px}
+.beats li::marker{font:500 11px var(--mono);color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:2px}
+.chip{font:400 10.5px var(--mono);padding:2px 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.chip.flag{border-style:dashed;color:var(--ink)}
+.chip.tbd{background:var(--lane-s)}
+.opt{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--ink);padding:6px 8px;border-radius:6px;border:1px solid var(--line);background:var(--bg)}
+.opt i{font:500 11px var(--mono);font-style:normal;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;flex:none;color:var(--bg)}
+.opt.o1 i{background:var(--a)}.opt.o2 i{background:var(--b)}
+.card.dim,.egg.dim{opacity:.22}
+.egg{position:relative;z-index:2;background:var(--surface);border:1px solid var(--egg);border-radius:999px 12px 12px 999px;padding:7px 14px 7px 12px;display:grid;grid-template-columns:auto 1fr;gap:1px 10px;align-items:center;cursor:pointer;transition:opacity .2s}
+.egg .id{grid-row:span 2;font:500 12px var(--mono);color:var(--bg);background:var(--egg);width:30px;height:30px;border-radius:50%;display:grid;place-items:center}
+.egg b{font:700 13px/1.15 var(--display)}
+.egg span{font-size:11.5px;color:var(--muted)}
+.egg:hover{box-shadow:0 2px 0 var(--egg)}
+.eggs-off .cell.E,.eggs-off .lane.E{display:none}
+.st{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--need);flex:none}
+.st.ok{background:var(--ok);border-color:var(--ok)}
+
+svg#edges{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3;overflow:visible}
+.e{fill:none;stroke-width:2.2;stroke:var(--s);transition:opacity .2s}
+.e.a{stroke:var(--a)}.e.b{stroke:var(--b)}.e.dash{stroke-dasharray:6 5}
+.e.dim,.el.dim{opacity:.12}
+.mk-s{fill:var(--s)}.mk-a{fill:var(--a)}.mk-b{fill:var(--b)}
+.el text{font:500 10.5px var(--mono);fill:var(--muted)}
+.el rect{fill:var(--surface);stroke:var(--line)}
+
+#panel{position:fixed;z-index:20;top:0;right:0;bottom:0;width:min(420px,100%);background:var(--surface);border-left:1px solid var(--line);box-shadow:-12px 0 32px rgb(0 0 0 / .14);overflow-y:auto;
+  padding:calc(18px + env(safe-area-inset-top,0px)) max(18px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) 18px;display:grid;gap:16px;align-content:start}
+#panel[hidden]{display:none}
+#panel header{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+#panel h2{font-size:21px;line-height:1.1}
+#panel .kick{font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.x{font:500 13px var(--body);background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:6px 10px;cursor:pointer}
+.beat{display:grid;gap:8px;padding-top:14px;border-top:1px solid var(--line)}
+.beat:first-of-type{border-top:0;padding-top:0}
+.say{font:600 15.5px/1.35 var(--display)}
+.say.tbd{color:var(--muted)}
+dl{margin:0;display:grid;grid-template-columns:96px 1fr;gap:6px 12px;font-size:13px}
+dt{font:500 10.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-top:2px}
+dd{margin:0;min-width:0;overflow-wrap:anywhere}
+dd.mono{font-family:var(--mono);font-size:12px}
+.steps{margin:0;padding-left:18px;display:grid;gap:5px}
+.qa{display:grid;gap:3px;padding-top:12px;border-top:1px solid var(--line)}
+.qa b{font-family:var(--display);font-size:14.5px}
+.qa span{font-size:13px;color:var(--muted)}
+.qa em{font-style:normal;font-size:13px;color:var(--ink)}
+@media (max-width:640px){
+  #panel{top:auto;left:0;width:auto;max-height:78vh;border-left:0;border-top:1px solid var(--line);border-radius:14px 14px 0 0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .map{grid-template-columns:84px repeat(12,252px)}
+  .lane{padding:10px 8px;font-size:10px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<section class="top">
+  <div>
+    <h1>Chapter 2 Flow Map</h1>
+  </div>
+  <p>The Tokenizer factory, from the elevator to the cargo box. The top lane is Route A, the bottom lane is Route B, and both meet on the shared line. Click any card or egg to see its trigger, notes and status. Nothing here is final dialogue yet.</p>
+  <div class="bar">
+    <div class="seg" role="group" aria-label="Show route">
+      <button type="button" data-r="ALL" aria-pressed="true">Both routes</button>
+      <button type="button" data-r="A" aria-pressed="false">Route A</button>
+      <button type="button" data-r="B" aria-pressed="false">Route B</button>
+    </div>
+    <label class="tog"><input type="checkbox" id="eggToggle" checked> Easter eggs</label>
+    <button type="button" class="btn" id="oqBtn">Open questions</button>
+    <span class="stats" id="stats"></span>
+  </div>
+  <div class="legend">
+    <span><i class="sw"></i>Shared path</span>
+    <span><i class="sw a"></i>Route A</span>
+    <span><i class="sw b"></i>Route B</span>
+    <span><i class="sw d"></i>Only sometimes</span>
+    <span><i class="fk"></i>Filler (tutorial)</span>
+    <span><i class="dot"></i>Dialogue needed</span>
+    <span><i class="dot ok"></i>Ready to implement</span>
+    <span>Dashed tags show the managerTalked flag</span>
+  </div>
+</section>
+
+<div class="scroller" id="scroller"><div class="map" id="map"></div></div>
+<aside id="panel" hidden aria-live="polite"></aside>
+
+<script>
+const D = {"rows": [{"section": "Arrival", "route": "Shared", "cat": "Narrative", "who": "Internal Dialogue", "trig": "Region Trigger", "tnote": "Close to the Manager's work area after leaving the elevator", "dlg": "[TBD] Player sees the Manager pacing back and forth and thinks about what to do.", "end": "Click", "enote": "", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "", "route": "Shared", "cat": "Narrative", "who": "Internal Dialogue", "trig": "^^", "tnote": "", "dlg": "Option 1: [TBD] sneak past him.", "end": "Choice", "enote": "→ Route A", "ux": "CHOICE UI", "status": "Dialogue needed"}, {"section": "", "route": "Shared", "cat": "Narrative", "who": "Internal Dialogue", "trig": "^^", "tnote": "", "dlg": "Option 2: Maybe I should talk to the Manager.", "end": "Choice", "enote": "→ Route B", "ux": "CHOICE UI", "status": "Dialogue needed"}, {"section": "Route A – Sneak in", "route": "A", "cat": "Narrative", "who": "Internal Dialogue", "trig": "Automatic", "tnote": "After Option 1", "dlg": "[TBD] Player slips past the Manager and goes into the factory.", "end": "Automatic", "enote": "", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "Route A – First capture", "route": "A", "cat": "Narrative", "who": "Drone", "trig": "Action", "tnote": "First time a drone beam touches the player. No warning is shown in advance. Fallback: forced sweep at the Step 3 entrance", "dlg": "[TBD] Drone catches the player (optional short drone line).", "end": "Automatic", "enote": "", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "Route A – The Manager's deal", "route": "A", "cat": "Narrative", "who": "Manager", "trig": "Automatic", "tnote": "Player is brought to the Manager's platform", "dlg": "[TBD] The Manager looks at the player and asks if they work in the factory.", "end": "Click", "enote": "", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "", "route": "A", "cat": "Narrative", "who": "Manager", "trig": "^^", "tnote": "", "dlg": "[TBD] He decides to keep the player, but he doubts them.", "end": "Click", "enote": "", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "", "route": "A", "cat": "Narrative", "who": "Manager", "trig": "^^", "tnote": "", "dlg": "[TBD] He makes a deal with the player: the player takes the factory's bad working conditions up to the company, and he helps the player escape.", "end": "Click", "enote": "", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "", "route": "A", "cat": "Narrative", "who": "Manager", "trig": "^^", "tnote": "", "dlg": "[TBD] But first the player must prove they can do every job. Once they do, he will tell them how to get out.", "end": "Click", "enote": "", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "", "route": "A", "cat": "Narrative", "who": "Internal Dialogue", "trig": "^^", "tnote": "", "dlg": "[TBD] Short reaction from the player. They agree to the deal.", "end": "Click", "enote": "Set flag: managerTalked = true. Return to the station where the player was caught", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "Route B – Talk to the Manager", "route": "B", "cat": "Narrative", "who": "System", "trig": "Region Trigger", "tnote": "Close to the Manager", "dlg": "Press E to talk", "end": "Action taken", "enote": "Press E or leave region", "ux": "E", "status": "Ready to be implemented"}, {"section": "", "route": "B", "cat": "Narrative", "who": "Manager", "trig": "Press E", "tnote": "", "dlg": "[TBD] The Manager welcomes the player warmly.", "end": "Click", "enote": "", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "", "route": "B", "cat": "Narrative", "who": "Manager", "trig": "^^", "tnote": "Echoes his Chapter 1 line: \"Requirements have been changing a lot lately.\"", "dlg": "[TBD] He says he supports the player's escape. The company's updates make him uneasy, and he cannot go into the factory himself.", "end": "Click", "enote": "", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "", "route": "B", "cat": "Narrative", "who": "Manager", "trig": "^^", "tnote": "", "dlg": "[TBD] He tells the player to ask the worker at each station how the job works. He promises to tell the player how to get out once every station is done.", "end": "Click", "enote": "", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "", "route": "B", "cat": "Narrative", "who": "Internal Dialogue", "trig": "^^", "tnote": "", "dlg": "[TBD] Short reaction from the player.", "end": "Click", "enote": "Set flag: managerTalked = true", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "Step 1 – Get Input", "route": "Shared", "cat": "Narrative", "who": "System", "trig": "Region Trigger", "tnote": "Close to Worker (Station 1)", "dlg": "Press E to talk", "end": "Action taken", "enote": "Press E or leave region", "ux": "E", "status": "Ready to be implemented"}, {"section": "", "route": "A", "cat": "Narrative", "who": "Worker (Station 1)", "trig": "Press E", "tnote": "managerTalked = false", "dlg": "[TBD] Excuse: needs a restroom break and asks the player to cover.", "end": "Click", "enote": "", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "", "route": "Shared, B", "cat": "Narrative", "who": "Worker (Station 1)", "trig": "Press E", "tnote": "managerTalked = true. Secret-mission tone: the Manager quietly asked everyone to help", "dlg": "[TBD] Whispers like a secret contact: heard the player has a special assignment.", "end": "Click", "enote": "", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "", "route": "Shared", "cat": "Filler", "who": "Worker (Station 1)", "trig": "^^", "tnote": "", "dlg": "[TBD] Tutorial", "end": "Action taken", "enote": "Details TBD after the gameplay design is decided", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "", "route": "Shared", "cat": "Easter Egg", "who": "System", "trig": "Region Trigger", "tnote": "Close to the small robot NPCs at the capsule entrance", "dlg": "→ See Easter Eggs sheet: 1-A The Claw", "end": "N/A", "enote": "Optional", "ux": "", "status": "Dialogue needed"}, {"section": "", "route": "Shared", "cat": "Easter Egg", "who": "System", "trig": "Idle timer", "tnote": "Stand still for 5+ seconds without opening the capsule", "dlg": "→ See Easter Eggs sheet: 1-B Always Watching", "end": "N/A", "enote": "Optional", "ux": "", "status": "Dialogue needed"}, {"section": "", "route": "Shared", "cat": "Easter Egg", "who": "System", "trig": "Press E", "tnote": "Click the empty capsule shell after opening it", "dlg": "→ See Easter Eggs sheet: 1-C Little Survivor", "end": "N/A", "enote": "Optional", "ux": "", "status": "Dialogue needed"}, {"section": "Step 2 – Preprocessing", "route": "Shared", "cat": "Narrative", "who": "System", "trig": "Region Trigger", "tnote": "Close to Worker (Station 2)", "dlg": "Press E to talk", "end": "Action taken", "enote": "Press E or leave region", "ux": "E", "status": "Ready to be implemented"}, {"section": "", "route": "A", "cat": "Narrative", "who": "Worker (Station 2)", "trig": "Press E", "tnote": "managerTalked = false", "dlg": "[TBD] Excuse: lunch break started ten minutes ago.", "end": "Click", "enote": "", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "", "route": "Shared, B", "cat": "Narrative", "who": "Worker (Station 2)", "trig": "Press E", "tnote": "managerTalked = true. Secret-mission tone", "dlg": "[TBD] Hands over a stamp like a secret code.", "end": "Click", "enote": "", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "", "route": "Shared", "cat": "Filler", "who": "Worker (Station 2)", "trig": "^^", "tnote": "", "dlg": "[TBD] Tutorial", "end": "Action taken", "enote": "Details TBD after the gameplay design is decided", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "", "route": "Shared", "cat": "Easter Egg", "who": "System", "trig": "Random", "tnote": "3 word chunks sorted correctly in a row (chance, once per run)", "dlg": "→ See Easter Eggs sheet: 2-A Chain Panic", "end": "N/A", "enote": "Has consequence. Can be the first capture on Route A", "ux": "", "status": "Dialogue needed"}, {"section": "", "route": "Shared", "cat": "Easter Egg", "who": "System", "trig": "Press E", "tnote": "Click the worker next to the stamping machine", "dlg": "→ See Easter Eggs sheet: 2-B The Slowest Worker", "end": "N/A", "enote": "Has consequence", "ux": "", "status": "Dialogue needed"}, {"section": "Step 3 – Tokenization", "route": "A", "cat": "Narrative", "who": "Drone", "trig": "Region Trigger", "tnote": "Step 3 entrance. Only if the player has not been caught yet (managerTalked = false). Cannot be avoided", "dlg": "[TBD] A drone beam sweeps across the entrance and catches the player.", "end": "Automatic", "enote": "Leads to Route A – First capture", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "", "route": "Shared", "cat": "Narrative", "who": "System", "trig": "Region Trigger", "tnote": "Close to Worker (Station 3)", "dlg": "Press E to talk", "end": "Action taken", "enote": "Press E or leave region", "ux": "E", "status": "Ready to be implemented"}, {"section": "", "route": "Shared, B", "cat": "Narrative", "who": "Worker (Station 3)", "trig": "Press E", "tnote": "managerTalked = true. Secret-mission tone", "dlg": "[TBD] Speaks in broken syllables on purpose.", "end": "Click", "enote": "", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "", "route": "Shared", "cat": "Filler", "who": "Worker (Station 3)", "trig": "^^", "tnote": "", "dlg": "[TBD] Tutorial", "end": "Action taken", "enote": "Details TBD after the gameplay design is decided", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "", "route": "B", "cat": "Easter Egg", "who": "System", "trig": "Action", "tnote": "3 wrong merges in a row (once per run)", "dlg": "→ See Easter Eggs sheet: 3-A Routine Inspection", "end": "N/A", "enote": "Route B only. Has consequence", "ux": "", "status": "Dialogue needed"}, {"section": "Step 4 – Vocabulary Lookup", "route": "Shared", "cat": "Narrative", "who": "System", "trig": "Region Trigger", "tnote": "Close to Worker (Station 4)", "dlg": "Press E to talk", "end": "Action taken", "enote": "Press E or leave region", "ux": "E", "status": "Ready to be implemented"}, {"section": "", "route": "Shared, B", "cat": "Narrative", "who": "Worker (Station 4)", "trig": "Press E", "tnote": "managerTalked = true. Secret-mission tone", "dlg": "[TBD] Acts like a vending machine and asks what the player would like.", "end": "Click", "enote": "", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "", "route": "Shared", "cat": "Filler", "who": "Worker (Station 4)", "trig": "^^", "tnote": "", "dlg": "[TBD] Tutorial", "end": "Action taken", "enote": "Details TBD after the gameplay design is decided", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "", "route": "Shared", "cat": "Easter Egg", "who": "System", "trig": "Action", "tnote": "Press the red search button 3 times within 2 seconds (once per run)", "dlg": "→ See Easter Eggs sheet: 4-A Too Many Tokens", "end": "N/A", "enote": "Has consequence", "ux": "", "status": "Dialogue needed"}, {"section": "Step 5 – Context Window", "route": "Shared", "cat": "Narrative", "who": "System", "trig": "Region Trigger", "tnote": "Close to Worker (Station 5)", "dlg": "Press E to talk", "end": "Action taken", "enote": "Press E or leave region", "ux": "E", "status": "Ready to be implemented"}, {"section": "", "route": "Shared, B", "cat": "Narrative", "who": "Worker (Station 5)", "trig": "Press E", "tnote": "managerTalked = true. Secret-mission tone. Keep it short", "dlg": "[TBD] Pretends to sweep while whispering instructions.", "end": "Click", "enote": "", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "", "route": "Shared", "cat": "Filler", "who": "Worker (Station 5)", "trig": "^^", "tnote": "", "dlg": "[TBD] Tutorial", "end": "Action taken", "enote": "Details TBD. Covers the capacity limit, the over-capacity warning, and the strategy choice", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "", "route": "Shared", "cat": "Narrative", "who": "Internal Dialogue", "trig": "^^", "tnote": "Order with the tutorial to be confirmed once the gameplay is set", "dlg": "[TBD] Player sees the earlier messages already stored here.", "end": "Click", "enote": "", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "", "route": "Shared", "cat": "Narrative", "who": "Internal Dialogue", "trig": "Action", "tnote": "After the player chooses a strategy", "dlg": "[TBD] One short reaction line for each choice (3 versions).", "end": "Click", "enote": "Delete / Compress / Retain", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "", "route": "Shared", "cat": "Easter Egg", "who": "System", "trig": "Press E", "tnote": "Click Mop-E twice", "dlg": "→ See Easter Eggs sheet: 5-A Mop-E, the Forgetful Cleaner", "end": "N/A", "enote": "Has consequence", "ux": "", "status": "Dialogue needed"}, {"section": "Step 6 – Escape", "route": "B", "cat": "Narrative", "who": "Manager (arm)", "trig": "Automatic", "tnote": "After the player finishes all stations", "dlg": "[TBD] The Manager's arm reaches over and hands the player a signed note. Note text: how to escape.", "end": "Click", "enote": "", "ux": "NOTE ASSET", "status": "Dialogue needed"}, {"section": "", "route": "A", "cat": "Narrative", "who": "Worker (last station)", "trig": "Press E", "tnote": "After the player finishes all stations (the Manager's deal)", "dlg": "[TBD] The worker hands over an unsigned note and does not say who wrote it.", "end": "Click", "enote": "", "ux": "NOTE ASSET", "status": "Dialogue needed"}, {"section": "", "route": "Shared", "cat": "Narrative", "who": "Internal Dialogue", "trig": "Automatic", "tnote": "After reading the note", "dlg": "[TBD] Player decides to hide in a cargo box.", "end": "Action taken", "enote": "Hide inside the cargo box", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "", "route": "Shared", "cat": "Easter Egg", "who": "System", "trig": "Press E", "tnote": "Click a token next to the box while hiding", "dlg": "→ See Easter Eggs sheet: 6-A Anomaly!", "end": "N/A", "enote": "Optional", "ux": "", "status": "Dialogue needed"}, {"section": "", "route": "Shared", "cat": "Easter Egg", "who": "System", "trig": "Press E", "tnote": "Click the \"FAST\" lever while the box rides the conveyor", "dlg": "→ See Easter Eggs sheet: 6-B The Vault Ride", "end": "N/A", "enote": "Optional", "ux": "", "status": "Dialogue needed"}, {"section": "Ending echo", "route": "A", "cat": "Narrative", "who": "Manager", "trig": "Automatic", "tnote": "The player's box passes the checkpoint", "dlg": "[TBD] He stops at the box, then lets it pass. ", "end": "Automatic", "enote": "", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "", "route": "B", "cat": "Narrative", "who": "Manager", "trig": "Automatic", "tnote": "Closing moment for Route B", "dlg": "[TBD] Closing echo for Route B.", "end": "Automatic", "enote": "", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}, {"section": "", "route": "Shared", "cat": "Narrative", "who": "System", "trig": "Automatic", "tnote": "Player enters the \"TO NEXT CHAPTER\" archway", "dlg": "[TBD] Collapse transition into Chapter 3: Embedding.", "end": "Automatic", "enote": "", "ux": "CHARACTER DIALOGUE", "status": "Dialogue needed"}], "eggs": {"1-A": {"id": "1-A", "step": "1 Get Input", "name": "The Claw", "type": "No consequence", "ref": "Toy Story – the claw machine scene at Pizza Planet", "trig": "The player walks to the capsule entrance and gets close to the small robot NPCs.", "what": "① A claw above the entrance puts capsules down. Three small robots stand next to it, look up at it, and whisper together: \"The Claw chooses who gets the next message.\"\n② The claw turns to the player, picks up the player's hard hat, shakes it twice, and puts it back.\n③ The robots say \"Ooooh.\" Then the claw turns back and drops the capsule. The whole scene takes 3–4 seconds.", "cons": "None", "meta": "The claw is like the system choosing which message to handle next. It also shows that the workers almost worship the system."}, "1-B": {"id": "1-B", "step": "1 Get Input", "name": "Always Watching", "type": "No consequence", "ref": "Monsters, Inc. – Roz suddenly slides in from the edge of the screen", "trig": "The player stands still in front of the entrance for more than 5 seconds without opening the capsule.", "what": "① One of the many mechanical arms on the Manager's platform slowly stretches out over the conveyor belt, stops in front of the player, and waves.\n② The hand points at the capsule twice, then pulls back. The capsule shakes twice to show it can be opened.\n③ A voice comes from the platform: \"Just checking in. Take your time… Not too much time.\"", "cons": "None, and it gently pushes a hesitant player to move on", "meta": "The Manager hands out capsules and manages the workflow. Only his arm reaches out. He stays on his platform, so this does not break the rule that he never enters the factory."}, "1-C": {"id": "1-C", "step": "1 Get Input", "name": "Little Survivor", "type": "No consequence", "ref": "WALL-E – WALL-E's cockroach friend (changed into a letter block)", "trig": "After opening the capsule, the player clicks the empty capsule shell once more.", "what": "A small letter block \"e\" is hiding in the shell. It has two thin legs and looks a bit dizzy. It stumbles off the conveyor belt and falls into a drain. The whole scene takes 3–4 seconds. There is no dialogue, no speech bubble, and no waving.", "cons": "None", "meta": "Echoes the idea that a message is split into characters before it is processed."}, "2-A": {"id": "2-A", "step": "2 Preprocessing", "name": "Chain Panic", "type": "Has consequence", "ref": "Minions series – a chain of silly panic", "trig": "After the player sorts 3 word chunks correctly in a row, there is a chance this happens (for example 1 in 3; the number can be adjusted). It can happen once per run.", "what": "① A worker at the next station grabs a just-processed word chunk from the steaming normalizer machine. It is too hot, so he drops it on his own foot.\n② He hops around holding his foot, shouting \"Hot, hot, hot!\", and bumps into another worker.\n③ The workers pass it on one by one, until all the workers on the line run out in a panic.\n④ The crowd pushes the player away from the station. A drone's light beam locks onto the player.\n⑤ Narration: \"Bad luck.\"", "cons": "The player is caught by a drone and goes back to the start of Step 2 to sort again. This ending is fixed and cannot be avoided.", "meta": "Echoes the drones and the disguised-employee setting, and reminds the player that this place is not safe."}, "2-B": {"id": "2-B", "step": "2 Preprocessing", "name": "The Slowest Worker", "type": "Has consequence", "ref": "Zootopia – Flash the sloth", "trig": "The player clicks a worker next to the stamping machine in the normalization area.", "what": "① His eyelids are heavy. He slowly pulls down the stamp lever, which takes about 5 seconds, with a slow \"ka… chunk…\"\n② He says as he pulls: \"Nor… mal… iz… ing…\"\n③ When the stamp comes down, he smiles and says: \"Next?\"\n④ Behind him, word chunks pile up on the conveyor belt, and the workers at the stations next to him sigh together.", "cons": "If the player watches for about 5 seconds, one word chunk in the current message is sorted automatically. The player can click again to skip it, but then gets no reward and no penalty.", "meta": "Normalization is what happens at this station, and the stamping action matches it directly."}, "3-A": {"id": "3-A", "step": "3 Tokenization", "name": "Routine Inspection", "type": "Has consequence", "ref": "Finding Nemo – the seagulls all turn their heads together", "trig": "The player makes 3 wrong merges in a row in Step 3 (the number can be adjusted). It can happen once per run.", "what": "① A drone's light beam moves closer to the player.\n② The Manager walks down from his platform into the factory (this is strictly forbidden in the setting).\n③ All the drones turn their heads at the same time and say together: \"Target. Target. Target.\"\n④ The Manager raises his hands and walks over in small steps: \"Nothing to see here. Totally routine inspection.\"\n⑤ The drones take him back and let him go in front of his platform. He clears his throat and goes back up, as if nothing happened.", "cons": "The player gets one extra chance: the alert state is cleared, the drones pull back, and the player can keep merging. Once per run.", "meta": "Shows that the Manager is willing to take a risk to help the player. It also matches two settings: he controls the factory, and he is not allowed to enter it. Option: only trigger it for players with high trust (not used for now)."}, "4-A": {"id": "4-A", "step": "4 Vocabulary Lookup", "name": "Too Many Tokens", "type": "Has consequence", "ref": "Fantasia – The Sorcerer's Apprentice, where an order is carried out too much", "trig": "While forging, the player presses the red search button 3 times within 2 seconds. It can happen once per run.", "what": "① The machine shakes, and the screen flashes \"Searching… Searching… Searching…\"\n② The machine burps, and the screen shows \"Found: EVERYTHING.\"\n③ A lot of metal tokens shoot out of the chute and pile up on the output tray.\n④ A worker next to it sighs and pulls a lever. A mechanical arm sweeps all the tokens on the floor into the recycling hole.\n⑤ The screen goes back to normal: \"Please be patient with the machine.\"", "cons": "Cost: the player must click a few times to clear the output tray, about 3 seconds.\nReward: one token in the pile is gold. Clicking it completes the current forging (or one lookup) automatically.\nNote: the junk tokens should all look gray with \"ID ????\", so they do not conflict with \"one token matches one ID\".", "meta": "A vocabulary is needed for an LLM to understand natural language."}, "5-A": {"id": "5-A", "step": "5 Context Window", "name": "Mop-E, the Forgetful Cleaner", "type": "Has consequence", "ref": "Finding Nemo – Dory's forgetfulness and \"Just keep swimming\"", "trig": "The player clicks Mop-E, the cleaning robot that patrols next to the exit conveyor belt, twice.", "what": "① First click: a small speech bubble with only 3 slots appears above its head. Each new word pushes out the oldest slot. It says: \"Hi! I'm Mop-E. I have a very short memory. I clean the… the… what was I saying?\"\n② Second click: \"Oh! Hello! Have we met?\" It spins around, shouts \"Just keep sweeping!\", and pushes its mop to the middle of the conveyor belt.\n③ It stops and stares: \"Where was I going?\"\n④ After 3 seconds it slides away and drops a sticky note: \"Note to self: it's OK to try again.\"", "cons": "Reward: clicking the sticky note gives the player one \"undo\", so they can pick a different context management strategy. Once per run.", "meta": "Maps to the limit on how much context an LLM conversation can hold, and to how it compresses and forgets."}, "6-A": {"id": "6-A", "step": "6 Escape", "name": "Anomaly!", "type": "No consequence", "ref": "Up – Dug gets distracted by a squirrel", "trig": "The player hides in the box and clicks a token next to the box.", "what": "① The player flicks it, and the token rolls far away.\n② A guard in the background is reporting: \"Perimeter secure. Nothing unusual. Nothing—\"\n③ His head snaps around: \"ANOMALY!\"\n④ He runs over, slides, and grabs the token: \"…It's a token.\"\n⑤ He looks left and right, pretends nothing happened, and walks back to his spot.", "cons": "None. It does not affect the other guards or the stealth check.", "meta": "None"}, "6-B": {"id": "6-B", "step": "6 Escape", "name": "The Vault Ride", "type": "No consequence", "ref": "Monsters, Inc. – the door vault chase at the end", "trig": "After the box passes the checkpoint and rides the conveyor belt to the exit automatically, the player clicks a lever labeled \"FAST\" next to the track.", "what": "① The conveyor belt suddenly speeds up, the camera tilts, and speed lines appear.\n② The track turns into a short roller coaster: it dives and loops, and other boxes flash by.\n③ The player's hard hat is thrown off, spins in the air, and lands back on the player's head.\n④ The box slows to normal speed and enters the \"TO NEXT CHAPTER\" archway.", "cons": "None. The arrival time and result are the same as when it is not triggered. The guards will not find the player.", "meta": "None"}}, "oq": [{"item": "Route A first capture", "assume": "The first time a drone beam touches the player (no warning shown). If the player is not caught by the Step 3 entrance, a forced sweep catches them there", "ask": "Where does the player return after the talk with the Manager?"}, {"item": "Route A ending", "assume": "Manager stops at the player's box and lets it pass", "ask": "Add a hint line about \"not the first time\"?"}, {"item": "Route B ending", "assume": "Left blank", "ask": "What closes the Manager's story on Route B?"}, {"item": "Escape note", "assume": "B: Manager's arm hands a signed note. A: last worker hands an unsigned note, as the Manager's quiet way of keeping the deal. Same note shape. Gate = finish all stations", "ask": "Should Route A also get a signed note from the Manager?"}, {"item": "3-A Routine Inspection", "assume": "Route B only. The Easter Eggs sheet still says \"not used for now\" in the Metaphor cell", "ask": "Update the Easter Eggs sheet text?"}, {"item": "Step 3 example words", "assume": "Example words in the gameplay doc need to be replaced with words a real tokenizer splits (for example \"indivisible\")", "ask": "Pick the words"}, {"item": "Step 5 tone", "assume": "Keep the tone serious on this screen. No jokes near the history messages", "ask": "OK?"}, {"item": "Worker names", "assume": "Written as Worker (Station 1–5)", "ask": "Real names or one shared look?"}, {"item": "New sheet rules", "assume": "New Route column, a new End dialogue type \"Choice\", and a new Category \"Easter Egg\" (pointer rows to the Easter Eggs sheet). Each step has its own row color, like Chapter 1", "ask": "OK for the gameplay owner?"}, {"item": "managerTalked flag", "assume": "One flag. False on Route A until the first capture. True on Route B from the start, and on Route A after the deal. Steps 1–2 have an excuse version (Route A) and a secret-mission version (Shared). Steps 3–5 only have the secret-mission version", "ask": "OK for the gameplay owner?"}, {"item": "Drone beams", "assume": "No text warning that drones catch the player. The beams must be easy to see", "ask": "OK?"}, {"item": "Manager's deal", "assume": "Linear. A trade: the player reports the factory's bad conditions upward, and the Manager helps the player escape once all jobs are done. Route B is support without a trade", "ask": "OK?"}, {"item": "Tutorial rows", "assume": "Each step has one Tutorial row. The teaching details are added after the gameplay design is decided", "ask": "OK?"}, {"item": "Manager's motive", "assume": "He is uneasy about the company's updates (see his Chapter 1 line about requirements changing). Route B: he says so openly. Route A: he keeps it to himself and turns it into a deal", "ask": "OK?"}]};
+const R = D.rows, EG = D.eggs;
+
+/* ---- layout definition -------------------------------------------------- */
+const strip = s => String(s||"").replace(/^\[TBD\]\s*/,"").trim();
+const eggId = i => (R[i].dlg.match(/(\d-[A-Z])/)||[])[1];
+
+const COLS = [
+ {k:"Arrival", t:"Leaves the elevator", S:[
+   {id:"arr_see",  rows:[0], title:"Sees the Manager pacing", who:"Internal Dialogue"},
+   {id:"arr_choice",rows:[1,2], title:"Sneak or talk?", who:"Internal Dialogue", choice:true}]},
+ {k:"Route split", t:"Two ways in", A:[{id:"a_sneak",rows:[3],title:"Slips past him",who:"Internal Dialogue"}],
+   B:[{id:"b_talk",rows:[10,11,12,13,14],title:"Talks to the Manager",who:"Manager",flag:"sets managerTalked = true",beats:true}]},
+ {k:"Route A", t:"First capture", A:[{id:"a_capture",rows:[4],title:"A drone beam catches you",who:"Drone",note:"Can happen at any step. If not caught by the Step 3 entrance, a forced sweep catches you there."}]},
+ {k:"Route A", t:"The Manager's deal", A:[{id:"a_deal",rows:[5,6,7,8,9],title:"The Manager's deal",who:"Manager",flag:"sets managerTalked = true",beats:true}]},
+ {k:"Step 1", t:"Get Input", pin:15, A:[{id:"s1_a",rows:[16],title:"Needs a restroom break",who:"Worker (Station 1)",flag:"managerTalked = false",note:"Before the first capture"}],
+   S:[{id:"s1_t",rows:[18],title:"Tutorial",who:"Worker (Station 1)",filler:true}],
+   B:[{id:"s1_b",rows:[17],title:"Whispers about a special assignment",who:"Worker (Station 1)",flag:"managerTalked = true"}], E:[19,20,21]},
+ {k:"Step 2", t:"Preprocessing", pin:22, A:[{id:"s2_a",rows:[23],title:"Lunch break started",who:"Worker (Station 2)",flag:"managerTalked = false",note:"Before the first capture"}],
+   S:[{id:"s2_t",rows:[25],title:"Tutorial",who:"Worker (Station 2)",filler:true}],
+   B:[{id:"s2_b",rows:[24],title:"Hands over a stamp like a code",who:"Worker (Station 2)",flag:"managerTalked = true"}], E:[26,27]},
+ {k:"Step 3", t:"Tokenization", pin:29, A:[{id:"s3_d",rows:[28],title:"Forced drone sweep",who:"Drone",note:"Only if you have not been caught yet. Leads to First capture."}],
+   S:[{id:"s3_o",rows:[30],title:"Speaks in broken syllables",who:"Worker (Station 3)",flag:"managerTalked = true"},{id:"s3_t",rows:[31],title:"Tutorial",who:"Worker (Station 3)",filler:true}], E:[32]},
+ {k:"Step 4", t:"Vocabulary Lookup", pin:33, S:[{id:"s4_o",rows:[34],title:"Acts like a vending machine",who:"Worker (Station 4)",flag:"managerTalked = true"},{id:"s4_t",rows:[35],title:"Tutorial",who:"Worker (Station 4)",filler:true}], E:[36]},
+ {k:"Step 5", t:"Context Window", pin:37, S:[{id:"s5_o",rows:[38],title:"Sweeps while whispering",who:"Worker (Station 5)",flag:"managerTalked = true"},{id:"s5_t",rows:[39],title:"Tutorial",who:"Worker (Station 5)",filler:true}], E:[42]},
+ {k:"Step 5", t:"Pick a strategy", S:[{id:"s5_m",rows:[40],title:"Earlier messages already stored",who:"Internal Dialogue"},{id:"s5_s",rows:[41],title:"One reaction per choice",who:"Internal Dialogue",chips:["Delete","Compress","Retain"]}]},
+ {k:"Step 6", t:"Escape", A:[{id:"s6_a",rows:[44],title:"Unsigned note from the last worker",who:"Worker (last station)"}],
+   S:[{id:"s6_h",rows:[45],title:"Hides in the cargo box",who:"Internal Dialogue"}],
+   B:[{id:"s6_b",rows:[43],title:"Signed note from the Manager's arm",who:"Manager (arm)"}], E:[46,47]},
+ {k:"Ending", t:"Echo and exit", A:[{id:"e_a",rows:[48],title:"The Manager lets the box pass",who:"Manager"}],
+   S:[{id:"e_x",rows:[50],title:"Into Chapter 3: Embedding",who:"System"}],
+   B:[{id:"e_b",rows:[49],title:"Closing echo for Route B",who:"Manager"}]}
+];
+
+const EDGES = [
+ ["arr_see","arr_choice","s"],
+ ["o1","a_sneak","a"],["o2","b_talk","b"],
+ ["a_sneak","a_capture","a","until a beam hits"],["a_capture","a_deal","a"],
+ ["a_deal","s1_a","a","back where caught"],["a_deal","s1_b","a","flag = true",true],["b_talk","s1_b","b"],
+ ["s1_a","s1_t","a"],["s1_b","s1_t","b"],
+ ["s1_t","s2_a","s"],["s1_t","s2_b","s"],["s2_a","s2_t","a"],["s2_b","s2_t","b"],
+ ["s2_t","s3_o","s"],["s2_t","s3_d","a","only if not caught",true],["s3_d","s3_o","a",null,true],
+ ["s3_o","s3_t","s"],["s3_t","s4_o","s"],["s4_o","s4_t","s"],["s4_t","s5_o","s"],["s5_o","s5_t","s"],
+ ["s5_t","s5_m","s"],["s5_m","s5_s","s"],
+ ["s5_s","s6_a","a","after all stations"],["s5_s","s6_b","b"],["s6_a","s6_h","a"],["s6_b","s6_h","b"],
+ ["s6_h","e_a","a"],["s6_h","e_b","b"],["e_a","e_x","a"],["e_b","e_x","b"]
+];
+
+/* ---- build -------------------------------------------------------------- */
+const map = document.getElementById("map");
+const LANES = [["A","Route A","Sneak in"],["S","Shared","Main line"],["B","Route B","Talk first"],["E","Easter eggs","Side stories"]];
+const el = (t,c,h)=>{const e=document.createElement(t); if(c) e.className=c; if(h!=null) e.innerHTML=h; return e};
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const routeOf = r => /Shared/.test(r) ? "S" : r.trim();
+const cardRoute = c => { const rs=c.rows.map(i=>routeOf(R[i].route)); return rs.every(x=>x===rs[0])?rs[0]:"S"; };
+const rtLabel = r => r==="S"?"Shared":"Route "+r;
+
+function mkDot(rows){ const ok=rows.every(i=>/Ready/.test(R[i].status)); return `<i class="st ${ok?"ok":""}" title="${esc(rows.map(i=>R[i].status).join(" / "))}"></i>`; }
+
+function buildCard(c, lane){
+  const rt = lane==="S"? cardRoute(c) : lane;
+  const raw = R[c.rows[0]].route;
+  const rtShow = /Shared, B/.test(raw) ? "Shared + B" : rtLabel(rt==="S"?"S":rt);
+  const n = el("article","card"+(c.filler?" filler":"")+(lane==="A"?" A":lane==="B"?" B":""));
+  n.id="n-"+c.id; n.tabIndex=0; n.setAttribute("role","button");
+  n.dataset.route = /Shared, B/.test(raw) ? "S" : rt;
+  let h = `<div class="ch"><span class="who">${esc(c.who)}</span><span class="rt ${lane==="S"?"":lane}">${rtShow}</span>${mkDot(c.rows)}</div><h4>${esc(c.title)}</h4>`;
+  if(c.choice){
+    h += c.rows.map((i,k)=>`<div class="opt o${k+1}" id="o${k+1}"><i>${k+1}</i><span>${esc(strip(R[i].dlg.replace(/^Option \d:\s*/,"")))}</span></div>`).join("");
+  } else if(c.beats){
+    h += `<ol class="beats">${c.rows.map(i=>`<li>${esc(strip(R[i].dlg))}</li>`).join("")}</ol>`;
+  } else {
+    const d = strip(R[c.rows[0]].dlg);
+    h += `<p>${esc(d)}</p>`;
+  }
+  if(c.note) h += `<p>${esc(c.note)}</p>`;
+  const chips=[];
+  if(c.chips) c.chips.forEach(x=>chips.push(`<span class="chip">${x}</span>`));
+  if(c.flag) chips.push(`<span class="chip flag">${esc(c.flag)}</span>`);
+  if(c.rows.some(i=>/^\[TBD\]/.test(R[i].dlg)||/^Option \d: \[TBD\]/.test(R[i].dlg))) chips.push(`<span class="chip tbd">TBD</span>`);
+  if(chips.length) h += `<div class="chips">${chips.join("")}</div>`;
+  n.innerHTML = h;
+  const open=()=>openCard(c);
+  n.addEventListener("click",open);
+  n.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();open()}});
+  return n;
+}
+
+function buildEgg(i){
+  const id=eggId(i), g=EG[id];
+  const ref=(g.ref.split(" – ")[0]||"");
+  const n=el("div","egg"); n.tabIndex=0; n.setAttribute("role","button");
+  n.dataset.route = R[i].route==="B" ? "B" : "S";
+  n.innerHTML=`<span class="id">${id}</span><b>${esc(g.name)}</b><span>${esc(ref)} · ${/Has/.test(g.type)?"has consequence":"no consequence"}${R[i].route==="B"?" · Route B only":""}</span>`;
+  const open=()=>openEgg(i,id);
+  n.addEventListener("click",open);
+  n.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();open()}});
+  return n;
+}
+
+/* header row */
+map.appendChild(el("div","lane H",""));
+COLS.forEach(c=>{
+  const h=el("div","hd",`<small>${esc(c.k)}</small><h3>${esc(c.t)}</h3>`);
+  if(c.pin!=null){
+    const p=el("button","pin","E · talk to the worker"); p.type="button";
+    p.title=R[c.pin].trig+" · "+R[c.pin].tnote;
+    p.addEventListener("click",()=>openRows([c.pin],`${c.k}: Press E prompt`,c.t));
+    h.appendChild(p);
+  }
+  map.appendChild(h);
+});
+/* lanes */
+LANES.forEach(([key,name,sub])=>{
+  map.appendChild(el("div","lane "+key,`<b>${name}</b>${sub}`));
+  COLS.forEach(c=>{
+    const cell=el("div","cell "+key);
+    if(key==="E"){ (c.E||[]).forEach(i=>cell.appendChild(buildEgg(i))); }
+    else (c[key]||[]).forEach(card=>cell.appendChild(buildCard(card,key)));
+    map.appendChild(cell);
+  });
+});
+const svgNS="http://www.w3.org/2000/svg";
+const svg=document.createElementNS(svgNS,"svg"); svg.id="edges"; svg.setAttribute("aria-hidden","true");
+svg.innerHTML=`<defs>${["s","a","b"].map(k=>`<marker id="ar-${k}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-${k}" d="M1 1 L9 5 L1 9 z"/></marker>`).join("")}</defs><g id="eg"></g>`;
+map.appendChild(svg);
+
+/* ---- edges -------------------------------------------------------------- */
+function drawEdges(){
+  const g=document.getElementById("eg"); g.innerHTML="";
+  const m=map.getBoundingClientRect();
+  const box=id=>{const e=document.getElementById(id)||document.getElementById("n-"+id); if(!e) return null; const r=e.getBoundingClientRect();
+    return {l:r.left-m.left,r:r.right-m.left,t:r.top-m.top,b:r.bottom-m.top,cx:(r.left+r.right)/2-m.left,cy:(r.top+r.bottom)/2-m.top,el:e}};
+  EDGES.forEach(([f,t,cls,label,dash])=>{
+    const a=box(f), b=box(t); if(!a||!b) return;
+    let x1,y1,x2,y2,d;
+    const sameCol = Math.abs(a.cx-b.cx) < 40 && f!=="o1" && f!=="o2";
+    if(sameCol){
+      if(a.cy<b.cy){x1=a.cx;y1=a.b;x2=b.cx;y2=b.t}else{x1=a.cx;y1=a.t;x2=b.cx;y2=b.b}
+      const my=(y1+y2)/2; d=`M${x1} ${y1} L${x2} ${y2}`;
+    } else {
+      x1=a.r;y1=a.cy;x2=b.l;y2=b.cy;
+      const dx=Math.max(24,(x2-x1)*.5);
+      d=Math.abs(y1-y2)<2?`M${x1} ${y1} L${x2} ${y2}`:`M${x1} ${y1} C${x1+dx} ${y1} ${x2-dx} ${y2} ${x2} ${y2}`;
+    }
+    const p=document.createElementNS(svgNS,"path");
+    p.setAttribute("d",d); p.setAttribute("class","e "+cls+(dash?" dash":"")); p.setAttribute("marker-end",`url(#ar-${cls})`);
+    p.dataset.cls=cls; g.appendChild(p);
+    if(false){
+      const gx=document.createElementNS(svgNS,"g"); gx.setAttribute("class","el"); gx.dataset.cls=cls;
+      const tx=document.createElementNS(svgNS,"text"); tx.textContent=label;
+      const mx=(x1+x2)/2, my=(y1+y2)/2;
+      tx.setAttribute("x",mx); tx.setAttribute("y",my+4); tx.setAttribute("text-anchor","middle");
+      const rc=document.createElementNS(svgNS,"rect"); gx.append(rc,tx); g.appendChild(gx);
+      const bb=tx.getBBox(); rc.setAttribute("x",bb.x-5); rc.setAttribute("y",bb.y-2); rc.setAttribute("width",bb.width+10); rc.setAttribute("height",bb.height+4); rc.setAttribute("rx",4);
+    }
+  });
+  applyFilter();
+}
+
+/* ---- filters ------------------------------------------------------------ */
+let route="ALL";
+function applyFilter(){
+  document.querySelectorAll(".card,.egg").forEach(n=>{
+    const r=n.dataset.route; n.classList.toggle("dim", route!=="ALL" && r!=="S" && r!==route);
+  });
+  document.querySelectorAll("#eg [data-cls]").forEach(n=>{
+    n.classList.toggle("dim", route!=="ALL" && n.dataset.cls!=="s" && n.dataset.cls!==route.toLowerCase());
+  });
+}
+document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{
+  route=b.dataset.r; document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",x===b)); applyFilter();
+}));
+document.getElementById("eggToggle").addEventListener("change",e=>{document.body.classList.toggle("eggs-off",!e.target.checked); requestAnimationFrame(drawEdges)});
+
+/* ---- panel -------------------------------------------------------------- */
+const panel=document.getElementById("panel");
+let lastFocus=null;
+function showPanel(html){
+  lastFocus=document.activeElement; panel.innerHTML=html; panel.hidden=false;
+  panel.querySelector(".x").addEventListener("click",closePanel); panel.scrollTop=0; panel.querySelector(".x").focus();
+}
+function closePanel(){panel.hidden=true; if(lastFocus&&lastFocus.focus) lastFocus.focus()}
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!panel.hidden) closePanel()});
+const dl=(pairs)=>`<dl>${pairs.filter(p=>p[1]!=null&&String(p[1]).trim()!==""&&p[1]!=="N/A"||p[2]).map(p=>`<dt>${p[0]}</dt><dd${p[2]?' class="mono"':""}>${esc(p[1])}</dd>`).join("")}</dl>`;
+function beatHtml(i){
+  const r=R[i], tbd=/\[TBD\]/.test(r.dlg);
+  return `<div class="beat"><div class="say ${tbd?"tbd":""}">${esc(r.dlg)}</div>${dl([
+    ["Character",r.who],["Route",r.route],["Category",r.cat],["Trigger",r.trig],["Trigger note",r.tnote],
+    ["Ends by",r.end],["End note",r.enote],["UX asset",r.ux],["Status",r.status]])}</div>`;
+}
+function openRows(rows,title,kick){
+  showPanel(`<header><div><div class="kick">${esc(kick||"")}</div><h2>${esc(title)}</h2></div><button class="x" type="button">Close</button></header>${rows.map(beatHtml).join("")}`);
+}
+function openCard(c){ openRows(c.rows,c.title,R[c.rows[0]].section||c.who); }
+function openEgg(i,id){
+  const g=EG[id];
+  const steps=g.what.split(/\s*\/\s*\n?|\n/).filter(Boolean);
+  showPanel(`<header><div><div class="kick">Easter egg ${id} · ${esc(g.step)}</div><h2>${esc(g.name)}</h2></div><button class="x" type="button">Close</button></header>
+  <div class="beat">${dl([["Type",g.type],["Inspired by",g.ref],["Trigger",g.trig]])}
+  <div class="kick">What happens</div><ol class="steps">${steps.map(s=>`<li>${esc(s.replace(/^[①②③④⑤]\s*/,""))}</li>`).join("")}</ol>
+  ${dl([["Consequence",g.cons.replace(/\n/g," ")],["Metaphor",g.meta],["On the route",R[i].enote]])}</div>`);
+}
+document.getElementById("oqBtn").addEventListener("click",()=>{
+  showPanel(`<header><div><div class="kick">For the next meeting</div><h2>Open questions</h2></div><button class="x" type="button">Close</button></header>${
+    D.oq.map(q=>`<div class="qa"><b>${esc(q.item)}</b><span>${esc(q.assume)}</span><em>${esc(q.ask)}</em></div>`).join("")}`);
+});
+
+/* ---- stats & start ------------------------------------------------------ */
+(function(){
+  const main=R.filter(r=>r.cat!=="Easter Egg"), need=main.filter(r=>/needed/.test(r.status)).length;
+  document.getElementById("stats").innerHTML=`<b>${need}</b> of ${main.length} lines need dialogue · <b>${Object.keys(EG).length}</b> Easter eggs`;
+})();
+const go=()=>requestAnimationFrame(drawEdges);
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(go); else go();
+window.addEventListener("load",go);
+new ResizeObserver(go).observe(map);
+</script>
+
+</body></html>
