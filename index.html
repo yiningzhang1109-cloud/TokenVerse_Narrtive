@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Token Verse Narrative</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#EDF1F1; --surface:#FFFFFF; --ink:#13201F; --muted:#586968; --line:#C6D1D0; --accent:#0B7776;
+  --display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0F1615; --surface:#182120; --ink:#E5EEEC; --muted:#92A5A2; --line:#2B3A38; --accent:#4FC4C1; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--body);padding:48px 20px}
+main{max-width:680px;margin:0 auto;display:grid;gap:28px}
+h1{font:700 clamp(28px,5vw,40px)/1.05 var(--display);margin:0;letter-spacing:-.01em}
+p{margin:0;color:var(--muted)}
+ul{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+a.item{display:grid;gap:4px;padding:16px 18px;background:var(--surface);border:1px solid var(--line);border-radius:10px;color:inherit;text-decoration:none}
+a.item:hover{border-color:var(--accent)}
+a.item:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.item b{font:700 18px/1.2 var(--display)}
+.item span{color:var(--muted);font-size:14px}
+.item code{font:400 12px var(--mono);color:var(--accent)}
+.label{font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="label">Token Verse</div>
+    <h1>Narrative files</h1>
+  </header>
+  <p>Working files for the Token Verse story and dialogue. Click an item to open it.</p>
+  <ul>
+    <li>
+      <a class="item" href="chapter2-flow-map.html">
+        <b>Chapter 2 Flow Map</b>
+        <span>The Tokenizer factory as a clickable flow: Route A, Route B, the shared line and the Easter eggs.</span>
+        <code>chapter2-flow-map.html</code>
+      </a>
+    </li>
+  </ul>
+</main>
+</body>
+</html>
